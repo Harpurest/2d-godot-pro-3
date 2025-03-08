@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://test/Node2D.tres" type="Shader" id=1]
+
+[sub_resource type="ShaderMaterial" id=5]
+render_priority = 1
+shader = ExtResource( 1 )
+shader_param/ratio = 0.3
+shader_param/move = 0.1
+
+[sub_resource type="Gradient" id=6]
+offsets = PoolRealArray( 0.0705882 )
+colors = PoolColorArray( 1, 1, 1, 1 )
+
+[sub_resource type="GradientTexture" id=7]
+gradient = SubResource( 6 )
+
+[node name="Node2D" type="Node2D"]
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+material = SubResource( 5 )
+color = Color( 1, 1, 1, 0 )
+texture = SubResource( 7 )
+polygon = PoolVector2Array( 702.205, 24.2925, 472.792, 128, 287.821, 135, 12.205, 15.2925, 39.9785, 232, 169.367, 341, 516.205, 208.292 )

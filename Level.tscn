@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://environment/Rock.tscn" type="PackedScene" id=1]
+[ext_resource path="res://characters/player/Player.tscn" type="PackedScene" id=2]
+[ext_resource path="res://environment/Pit.tscn" type="PackedScene" id=3]
+[ext_resource path="res://level.gd" type="Script" id=4]
+
+[node name="Level" type="Node2D"]
+script = ExtResource( 4 )
+
+[node name="Pit" parent="." instance=ExtResource( 3 )]
+position = Vector2( 529, 521 )
+
+[node name="YSort" type="YSort" parent="."]
+
+[node name="Player" parent="YSort" instance=ExtResource( 2 )]
+position = Vector2( 233, 196 )
+
+[node name="Rock" parent="YSort" instance=ExtResource( 1 )]
+position = Vector2( 624, 155 )
+scale = Vector2( 0.49, 0.49 )
+
+[node name="Rock2" parent="YSort" instance=ExtResource( 1 )]
+position = Vector2( 430, 339 )
+scale = Vector2( 0.49, 0.49 )
+
+[node name="Rock3" parent="YSort" instance=ExtResource( 1 )]
+position = Vector2( 703, 429 )
+scale = Vector2( 0.49, 0.49 )
+
+[node name="Rock4" parent="YSort" instance=ExtResource( 1 )]
+position = Vector2( 1070, 586 )
+scale = Vector2( 0.49, 0.49 )
