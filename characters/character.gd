@@ -1,12 +1,15 @@
 extends KinematicBody2D
 
 signal state_changed(state)
+signal direction_changed(direction)
+
+export(String) var weapon_path = ""
 
 var state = 0
 var _transitions = {}
+var weapon = null
 
 func _ready() -> void:
-	# connect("state_changed", $StateLabel, "_on_Character_state_changed")
 	$StateLabel.setup(self)
 
 func change_state(event):
@@ -15,6 +18,7 @@ func change_state(event):
 		return
 	
 	state = _transitions[transition]
+
 	enter_state()
 	emit_signal("state_changed", state)
 

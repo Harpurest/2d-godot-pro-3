@@ -10,7 +10,8 @@ var _state_text = {
 	Player.States.BUMP: "bump",
 	Player.States.JUMP: "jump",
 	Player.States.FALL: "fall",
-	Player.States.RESPAWN: "respawn"
+	Player.States.RESPAWN: "respawn",
+	Player.States.ATTACK: "attack"
 }
 
 func setup(character):

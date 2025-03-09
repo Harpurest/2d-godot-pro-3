@@ -12,7 +12,8 @@ enum States {
 	BUMP,
 	JUMP,
 	FALL,
-	RESPAWN
+	RESPAWN,
+	ATTACK
 }
 
 enum Events {
@@ -24,7 +25,8 @@ enum Events {
 	BUMP,
 	JUMP,
 	FALL,
-	RESPAWN
+	RESPAWN,
+	ATTACK
 }
 
 const SPEED = {
@@ -69,24 +71,45 @@ func _init():
 		[States.IDLE, Events.RUN]: States.RUN,
 		[States.IDLE, Events.JUMP]: States.JUMP,
 		[States.IDLE, Events.FALL]: States.FALL,
+		[States.IDLE, Events.ATTACK]: States.ATTACK,
+		
 		[States.WALK, Events.STOP]: States.IDLE,
 		[States.WALK, Events.RUN]: States.RUN,
 		[States.WALK, Events.JUMP]: States.JUMP,
 		[States.WALK, Events.FALL]: States.FALL,
+		[States.WALK, Events.ATTACK]: States.ATTACK,
+		
 		[States.RUN, Events.STOP]: States.IDLE,
 		[States.RUN, Events.WALK]: States.WALK,
 		[States.RUN, Events.JUMP]: States.JUMP,
 		[States.RUN, Events.BUMP]: States.BUMP,
 		[States.RUN, Events.FALL]: States.FALL,
+		[States.RUN, Events.ATTACK]: States.ATTACK,
+		
 		[States.BUMP, Events.IDLE]: States.IDLE,
+		
 		[States.JUMP, Events.IDLE]: States.IDLE,
+		
 		[States.FALL, Events.RESPAWN]: States.RESPAWN,
+		
 		[States.RESPAWN, Events.IDLE]: States.IDLE,
+
+		[States.ATTACK, Events.IDLE]: States.IDLE,
 	}
 
 func _ready():
 	$DirectionVisualizer.setup(self)
 	$Tween.connect("tween_completed", self, "_on_Tween_tween_completed")
+
+	if not weapon_path:
+		return
+	var weapon_node = load(weapon_path).instance()
+	
+	$WeaponPivot/WeaponSpawn.add_child(weapon_node)
+	weapon = $WeaponPivot/WeaponSpawn.get_child(0)
+	weapon.connect("attack_finished", self, "on_Weapon_attack_finished")
+	
+	$WeaponPivot.setup(self)
 
 func _physics_process(delta):
 	var slide_count = get_slide_count()
@@ -101,6 +124,7 @@ func _physics_process(delta):
 	match state:
 		States.WALK, States.RUN, States.JUMP:
 			_last_input_direction = input.direction if input.direction != Vector2() else _last_input_direction
+			emit_signal("direction_changed", _last_input_direction)
 			var params = MOVE_STRATEGY[state].go(input.direction, _speed, _max_speed,_velocity, delta)
 			self._speed = params.speed
 			self._velocity = params.velocity
@@ -127,7 +151,7 @@ func enter_state():
 			$AnimationPlayer.play("BASE")
 			# continue will fallthrough the next check
 			continue
-			
+
 		States.IDLE:
 			_velocity = Vector2()
 			_max_speed = SPEED[States.WALK]
@@ -140,7 +164,7 @@ func enter_state():
 			_jump_height = JUMP_HEIGHT[state]
 			$AnimationPlayer.playback_speed = _max_speed / SPEED[States.WALK]
 			$AnimationPlayer.play("move")
-		
+
 		States.BUMP, States.JUMP:
 			_jump_duration = JUMP_DURATION[state]
 			if state == States.BUMP:
@@ -161,7 +185,7 @@ func enter_state():
 				Tween.TRANS_LINEAR,
 				Tween.EASE_IN)
 			$Tween.start()
-		
+
 		States.FALL:
 			$Tween.interpolate_property(
 				self,
@@ -175,7 +199,7 @@ func enter_state():
 
 		States.RESPAWN:
 			position = _pit_position + _last_input_direction.rotated(PI) * _pit_distance
-			
+
 			$Tween.interpolate_property(
 				self,
 				"scale",
@@ -186,12 +210,21 @@ func enter_state():
 				Tween.EASE_IN)
 			$Tween.start()
 
+		States.ATTACK:
+			if not weapon:
+				change_state(Events.IDLE)
+				return
+			weapon.attack()
+			$AnimationPlayer.play("BASE")
+			set_physics_process(false)
+
 static func get_raw_input(state, slide_count):
 	return {
 		direction = utils.get_input_direction(),
 		is_running = Input.is_action_pressed("run"),
 		is_jumping = Input.is_action_pressed("jump"),
 		is_bumping = (state == States.RUN and slide_count > 0),
+		is_attacking = Input.is_action_pressed("attack")
 	}
 
 static func decode_raw_input(input):
@@ -203,7 +236,9 @@ static func decode_raw_input(input):
 		event = Events.RUN
 	else:
 		event = Events.WALK
-		
+	
+	if input.is_attacking:
+		event = Events.ATTACK
 	if input.is_jumping:
 		event = Events.JUMP
 	if input.is_bumping:
@@ -234,3 +269,7 @@ func _on_Pit_body_fell(body, pit_position, pit_distance):
 	_pit_position = pit_position
 	_pit_distance = pit_distance
 	change_state(Events.FALL)
+
+func on_Weapon_attack_finished():
+	set_physics_process(true)
+	change_state(Events.IDLE)
