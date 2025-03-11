@@ -1,5 +1,8 @@
 extends "res://characters/character.gd"
 
+onready var base_pivot = $Pivot.position
+onready var base_shadow = $Shadow.position
+
 signal speed_changed(speed, max_speed)
 
 const MoveGroundStrategy = preload("res://characters/player/move-ground-strategy.gd")
@@ -63,7 +66,7 @@ var _collision_normal := Vector2()
 var _pit_position := Vector2()
 var _pit_distance := Vector2()
 
-var _last_input_direction := Vector2()
+var _last_input_direction := Vector2(1,0)
 
 func _init():
 	_transitions = {
@@ -117,14 +120,14 @@ func _physics_process(delta):
 		else _collision_normal
 	
 	var input = get_raw_input(state, slide_count)
+	_last_input_direction = input.direction if input.direction != Vector2() else _last_input_direction
+	emit_signal("direction_changed", _last_input_direction)
 	var event = decode_raw_input(input)
 
 	change_state(event)
 	
 	match state:
 		States.WALK, States.RUN, States.JUMP:
-			_last_input_direction = input.direction if input.direction != Vector2() else _last_input_direction
-			emit_signal("direction_changed", _last_input_direction)
 			var params = MOVE_STRATEGY[state].go(input.direction, _speed, _max_speed,_velocity, delta)
 			self._speed = params.speed
 			self._velocity = params.velocity
@@ -144,6 +147,11 @@ func _animate_jump(progress):
 	var shadow_scale = 1.0 - pivot_height / _jump_height * 0.5
 	$Pivot.position.y = -pivot_height;
 	$Shadow.scale = Vector2(shadow_scale, shadow_scale)
+	
+func _animate_attack(progress):
+	var pivot_position = 20 * pow(sin(1.5 * progress * PI), 0.8)
+	$Pivot.position = base_pivot + (pivot_position * _last_input_direction)
+	$Shadow.position = base_shadow + (pivot_position * _last_input_direction)
 
 func enter_state():
 	match state:
@@ -214,8 +222,17 @@ func enter_state():
 			if not weapon:
 				change_state(Events.IDLE)
 				return
+			$Tween.interpolate_method(
+				self,
+				"_animate_attack",
+				0,
+				1,
+				0.5,
+				Tween.TRANS_LINEAR,
+				Tween.EASE_IN
+			)
 			weapon.attack()
-			$AnimationPlayer.play("BASE")
+			$Tween.start()
 			set_physics_process(false)
 
 static func get_raw_input(state, slide_count):
@@ -272,4 +289,12 @@ func _on_Pit_body_fell(body, pit_position, pit_distance):
 
 func on_Weapon_attack_finished():
 	set_physics_process(true)
+	
+	# $Tween.stop(self, "_animate_attack")
+	$Tween.stop(self)
+	$Tween.remove_all()
+	$Pivot.position = base_pivot
+	$Shadow.position = base_shadow
+
 	change_state(Events.IDLE)
+	$AnimationPlayer.play("BASE")

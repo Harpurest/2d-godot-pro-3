@@ -7,18 +7,24 @@ const SCALE_RATE = 2.6
 
 func setup(player):
 	player.connect("speed_changed", self, "_on_Move_speed_changed")
+	player.connect("direction_changed", self, "_on_direction_changed")
 
 func _ready():
 	$Arrow.scale = Vector2(SCALE_RANGE.x, SCALE_RANGE.x)
 
-
+"""
 func _process(delta):
 	var input_direction = utils.get_input_direction()
 	if input_direction == Vector2():
 		return
 	
 	rotation = input_direction.angle()
+"""
 
+func _on_direction_changed(new_direction):
+	if new_direction == Vector2():
+		return
+	rotation = new_direction.angle()
 
 func _on_Move_speed_changed(_speed, max_speed):
 	var start_scale = $Arrow.scale.x
