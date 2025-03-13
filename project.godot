@@ -75,9 +75,9 @@ attack={
 
 [layer_names]
 
-2d_physics/layer_1="character"
-2d_physics/layer_2="weapon"
-2d_physics/layer_4="environment"
+2d_physics/layer_1="Character"
+2d_physics/layer_2="Weapon"
+2d_physics/layer_4="Environment"
 
 [physics]
 

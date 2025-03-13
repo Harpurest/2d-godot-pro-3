@@ -8,30 +8,6 @@ signal speed_changed(speed, max_speed)
 const MoveGroundStrategy = preload("res://characters/player/move-ground-strategy.gd")
 const MoveAirStrategy = preload("res://characters/player/move-air-strategy.gd")
 
-enum States {
-	IDLE,
-	WALK,
-	RUN,
-	BUMP,
-	JUMP,
-	FALL,
-	RESPAWN,
-	ATTACK
-}
-
-enum Events {
-	INVALID=-1,
-	STOP,
-	IDLE,
-	WALK,
-	RUN,
-	BUMP,
-	JUMP,
-	FALL,
-	RESPAWN,
-	ATTACK
-}
-
 const SPEED = {
 	States.WALK: 450,
 	States.RUN: 700
@@ -66,6 +42,8 @@ var _collision_normal := Vector2()
 var _pit_position := Vector2()
 var _pit_distance := Vector2()
 
+var _attack_duration = 0.3
+
 var _last_input_direction := Vector2(1,0)
 
 func _init():
@@ -75,12 +53,14 @@ func _init():
 		[States.IDLE, Events.JUMP]: States.JUMP,
 		[States.IDLE, Events.FALL]: States.FALL,
 		[States.IDLE, Events.ATTACK]: States.ATTACK,
+		[States.IDLE, Events.STAGGER]: States.STAGGER,
 		
 		[States.WALK, Events.STOP]: States.IDLE,
 		[States.WALK, Events.RUN]: States.RUN,
 		[States.WALK, Events.JUMP]: States.JUMP,
 		[States.WALK, Events.FALL]: States.FALL,
 		[States.WALK, Events.ATTACK]: States.ATTACK,
+		[States.WALK, Events.STAGGER]: States.STAGGER,
 		
 		[States.RUN, Events.STOP]: States.IDLE,
 		[States.RUN, Events.WALK]: States.WALK,
@@ -88,6 +68,7 @@ func _init():
 		[States.RUN, Events.BUMP]: States.BUMP,
 		[States.RUN, Events.FALL]: States.FALL,
 		[States.RUN, Events.ATTACK]: States.ATTACK,
+		[States.RUN, Events.STAGGER]: States.STAGGER,
 		
 		[States.BUMP, Events.IDLE]: States.IDLE,
 		
@@ -111,6 +92,7 @@ func _ready():
 	$WeaponPivot/WeaponSpawn.add_child(weapon_node)
 	weapon = $WeaponPivot/WeaponSpawn.get_child(0)
 	weapon.connect("attack_finished", self, "on_Weapon_attack_finished")
+	weapon.connect("attack_info", self, "on_Weapon_attack_info")
 	
 	$WeaponPivot.setup(self)
 
@@ -149,7 +131,7 @@ func _animate_jump(progress):
 	$Shadow.scale = Vector2(shadow_scale, shadow_scale)
 	
 func _animate_attack(progress):
-	var pivot_position = 20 * pow(sin(1.5 * progress * PI), 0.8)
+	var pivot_position = 20 * sin(1.5 * progress * PI)
 	$Pivot.position = base_pivot + (pivot_position * _last_input_direction)
 	$Shadow.position = base_shadow + (pivot_position * _last_input_direction)
 
@@ -227,7 +209,7 @@ func enter_state():
 				"_animate_attack",
 				0,
 				1,
-				0.5,
+				_attack_duration,
 				Tween.TRANS_LINEAR,
 				Tween.EASE_IN
 			)
@@ -235,7 +217,7 @@ func enter_state():
 			$Tween.start()
 			set_physics_process(false)
 
-static func get_raw_input(state, slide_count):
+func get_raw_input(state, slide_count):
 	return {
 		direction = utils.get_input_direction(),
 		is_running = Input.is_action_pressed("run"),
@@ -244,7 +226,7 @@ static func get_raw_input(state, slide_count):
 		is_attacking = Input.is_action_pressed("attack")
 	}
 
-static func decode_raw_input(input):
+func decode_raw_input(input):
 	var event = Events.INVALID
 
 	if input.direction == Vector2():
@@ -291,10 +273,13 @@ func on_Weapon_attack_finished():
 	set_physics_process(true)
 	
 	# $Tween.stop(self, "_animate_attack")
-	$Tween.stop(self)
-	$Tween.remove_all()
+	# $Tween.stop(self)
+	# $Tween.remove_all()
 	$Pivot.position = base_pivot
 	$Shadow.position = base_shadow
 
 	change_state(Events.IDLE)
 	$AnimationPlayer.play("BASE")
+
+func on_Weapon_attack_info(isBehind, time):
+	_attack_duration = time - 0.01;
