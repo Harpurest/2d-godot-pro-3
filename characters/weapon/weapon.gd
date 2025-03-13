@@ -51,6 +51,7 @@ func _change_state(new_state):
 			$AnimationPlayer.play("idle")
 		States.ATTACK:
 			monitoring = true
+			emit_signal("attack_info", true, 0.3)
 			$AnimationPlayer.play("attack_straight")
 	state = new_state
 

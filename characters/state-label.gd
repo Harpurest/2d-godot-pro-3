@@ -1,17 +1,17 @@
 extends Label
 
-
-const Player = preload("res://characters/player/player.gd")
+const Character = preload("res://characters/character.gd")
 
 var _state_text = {
-	Player.States.IDLE: "idle",
-	Player.States.WALK: "walk",
-	Player.States.RUN: "run",
-	Player.States.BUMP: "bump",
-	Player.States.JUMP: "jump",
-	Player.States.FALL: "fall",
-	Player.States.RESPAWN: "respawn",
-	Player.States.ATTACK: "attack"
+	Character.States.IDLE: "idle",
+	Character.States.WALK: "walk",
+	Character.States.RUN: "run",
+	Character.States.BUMP: "bump",
+	Character.States.JUMP: "jump",
+	Character.States.FALL: "fall",
+	Character.States.RESPAWN: "respawn",
+	Character.States.ATTACK: "attack",
+	Character.States.STAGGER: "stagger",
 }
 
 func setup(character):

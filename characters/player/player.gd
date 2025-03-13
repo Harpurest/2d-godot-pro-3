@@ -79,11 +79,12 @@ func _init():
 		[States.RESPAWN, Events.IDLE]: States.IDLE,
 
 		[States.ATTACK, Events.IDLE]: States.IDLE,
+
+		[States.STAGGER, Events.IDLE]: States.IDLE,
 	}
 
 func _ready():
 	$DirectionVisualizer.setup(self)
-	$Tween.connect("tween_completed", self, "_on_Tween_tween_completed")
 
 	if not weapon_path:
 		return
@@ -93,7 +94,7 @@ func _ready():
 	weapon = $WeaponPivot/WeaponSpawn.get_child(0)
 	weapon.connect("attack_finished", self, "on_Weapon_attack_finished")
 	weapon.connect("attack_info", self, "on_Weapon_attack_info")
-	
+
 	$WeaponPivot.setup(self)
 
 func _physics_process(delta):
@@ -217,6 +218,19 @@ func enter_state():
 			$Tween.start()
 			set_physics_process(false)
 
+		States.STAGGER:
+			$AnimationPlayer.play("stagger")
+			$Tween.interpolate_property(
+				self,
+				"position",
+				position,
+				position + (knockback_force * knockback_direction),
+				KNOCKBACK_DURATION,
+				Tween.TRANS_QUART,
+				Tween.EASE_OUT
+			)
+			$Tween.start()
+
 func get_raw_input(state, slide_count):
 	return {
 		direction = utils.get_input_direction(),
@@ -261,6 +275,8 @@ func _on_Tween_tween_completed(object, key):
 		change_state(Events.IDLE)
 	if key == ":scale" and scale.round() == Vector2():
 		change_state(Events.RESPAWN)
+	if key == ":position":
+		change_state(Events.IDLE)
 
 func _on_Pit_body_fell(body, pit_position, pit_distance):
 	if body != self:
