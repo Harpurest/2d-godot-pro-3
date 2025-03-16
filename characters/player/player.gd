@@ -54,6 +54,7 @@ func _init():
 		[States.IDLE, Events.FALL]: States.FALL,
 		[States.IDLE, Events.ATTACK]: States.ATTACK,
 		[States.IDLE, Events.STAGGER]: States.STAGGER,
+		[States.IDLE, Events.DIE]: States.DIE,
 		
 		[States.WALK, Events.STOP]: States.IDLE,
 		[States.WALK, Events.RUN]: States.RUN,
@@ -81,6 +82,9 @@ func _init():
 		[States.ATTACK, Events.IDLE]: States.IDLE,
 
 		[States.STAGGER, Events.IDLE]: States.IDLE,
+		[States.STAGGER, Events.DIE]: States.DIE,
+
+		[States.DIE, Events.DEATH]: States.DEATH,
 	}
 
 func _ready():
@@ -132,7 +136,7 @@ func _animate_jump(progress):
 	$Shadow.scale = Vector2(shadow_scale, shadow_scale)
 	
 func _animate_attack(progress):
-	var pivot_position = 20 * sin(1.5 * progress * PI)
+	var pivot_position = -20 * sin(1.5 * progress * PI)
 	$Pivot.position = base_pivot + (pivot_position * _last_input_direction)
 	$Shadow.position = base_shadow + (pivot_position * _last_input_direction)
 
@@ -205,17 +209,7 @@ func enter_state():
 			if not weapon:
 				change_state(Events.IDLE)
 				return
-			$Tween.interpolate_method(
-				self,
-				"_animate_attack",
-				0,
-				1,
-				_attack_duration,
-				Tween.TRANS_LINEAR,
-				Tween.EASE_IN
-			)
 			weapon.attack()
-			$Tween.start()
 			set_physics_process(false)
 
 		States.STAGGER:
@@ -230,6 +224,13 @@ func enter_state():
 				Tween.EASE_OUT
 			)
 			$Tween.start()
+
+		States.DIE:
+			# No more input when die
+			# set_physics_process(false)
+			set_process_input(false)
+			$CollisionShape2D.set_deferred("disabled", true)
+			$AnimationPlayer.play("die")
 
 func get_raw_input(state, slide_count):
 	return {
@@ -291,6 +292,7 @@ func on_Weapon_attack_finished():
 	# $Tween.stop(self, "_animate_attack")
 	# $Tween.stop(self)
 	# $Tween.remove_all()
+
 	$Pivot.position = base_pivot
 	$Shadow.position = base_shadow
 
@@ -298,4 +300,21 @@ func on_Weapon_attack_finished():
 	$AnimationPlayer.play("BASE")
 
 func on_Weapon_attack_info(isBehind, time):
+	$Tween.stop(self, "_animate_attack")
+	$Tween.remove_all()
+	$Pivot.position = base_pivot
+	$Shadow.position = base_shadow
+
 	_attack_duration = time - 0.01;
+	$WeaponPivot.show_behind_parent = isBehind
+
+	$Tween.interpolate_method(
+		self,
+		"_animate_attack",
+		0,
+		1,
+		_attack_duration,
+		Tween.TRANS_LINEAR,
+		Tween.EASE_IN
+	)
+	$Tween.start()

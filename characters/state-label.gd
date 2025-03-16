@@ -12,6 +12,8 @@ var _state_text = {
 	Character.States.RESPAWN: "respawn",
 	Character.States.ATTACK: "attack",
 	Character.States.STAGGER: "stagger",
+	Character.States.DIE: "die",
+	Character.States.DEATH: "death",
 }
 
 func setup(character):

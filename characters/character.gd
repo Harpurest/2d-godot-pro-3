@@ -14,7 +14,9 @@ enum States {
 	FALL,
 	RESPAWN,
 	ATTACK,
-	STAGGER
+	STAGGER,
+	DIE,
+	DEATH
 }
 
 enum Events {
@@ -28,7 +30,9 @@ enum Events {
 	FALL,
 	RESPAWN,
 	ATTACK,
-	STAGGER
+	STAGGER,
+	DIE,
+	DEATH
 }
 
 var knockback_direction := Vector2()
@@ -43,16 +47,21 @@ func _init():
 	_transitions = {
 		[States.IDLE, Events.ATTACK]: States.ATTACK,
 		[States.IDLE, Events.STAGGER]: States.STAGGER,
+		[States.IDLE, Events.DIE]: States.DIE,
 		
 		[States.ATTACK, Events.IDLE]: States.IDLE,
 		
 		[States.STAGGER, Events.IDLE]: States.IDLE,
+		[States.STAGGER, Events.DIE]: States.DIE,
+
+		[States.DIE, Events.DEATH]: States.DEATH,
 	}
 
 func _ready() -> void:
 	$StateLabel.setup(self)
 	$Health.connect("health_changed", self, "_on_Health_health_changed")
 	$Tween.connect("tween_completed", self, "_on_Tween_tween_completed")
+	$AnimationPlayer.connect("animation_finished", self, "_on_AnimationPlayer_animation_finished")
 
 func change_state(event):
 	var transition = [state, event]
@@ -62,6 +71,8 @@ func change_state(event):
 	match state:
 		States.STAGGER:
 			$Pivot/Body.modulate = Color('#ffffff')
+		States.DIE:
+			queue_free()
 	
 	state = _transitions[transition]
 
@@ -86,10 +97,14 @@ func enter_state():
 				Tween.EASE_OUT
 			)
 			$Tween.start()
+		States.DIE:
+			$CollisionShape2D.set_deferred("disabled", true)
+			$AnimationPlayer.play("die")
+
 
 func _on_Health_health_changed(new_health):
 	if new_health == 0:
-		queue_free()
+		change_state(Events.DIE)
 	else:
 		change_state(Events.STAGGER)
 
@@ -102,3 +117,7 @@ func take_damage(source, amount):
 func _on_Tween_tween_completed(object, key):
 	if key == ":position":
 		change_state(Events.IDLE)
+
+func _on_AnimationPlayer_animation_finished(animation_name):
+	if animation_name == 'die':
+		change_state(Events.DEATH)

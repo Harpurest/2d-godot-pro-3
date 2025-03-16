@@ -8,7 +8,7 @@
 [node name="Player" instance=ExtResource( 1 )]
 collision_mask = 8
 script = ExtResource( 7 )
-weapon_path = "res://characters/weapon/Weapon.tscn"
+weapon_path = "res://characters/weapon/Sword.tscn"
 
 [node name="Body" parent="Pivot" index="0"]
 texture = ExtResource( 2 )
