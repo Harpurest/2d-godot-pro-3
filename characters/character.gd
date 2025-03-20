@@ -111,7 +111,7 @@ func _on_Health_health_changed(new_health):
 func take_damage(source, amount):
 	if self.is_a_parent_of(source):
 		return
-	knockback_direction = (global_position - source.global_position).normalized()
+	knockback_direction = (global_position - source.colShape.global_position).normalized()
 	$Health.take_damage(amount)
 
 func _on_Tween_tween_completed(object, key):

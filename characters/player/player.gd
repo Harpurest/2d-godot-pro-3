@@ -98,6 +98,7 @@ func _ready():
 	weapon = $WeaponPivot/WeaponSpawn.get_child(0)
 	weapon.connect("attack_finished", self, "on_Weapon_attack_finished")
 	weapon.connect("attack_info", self, "on_Weapon_attack_info")
+	weapon.setup(self)
 
 	$WeaponPivot.setup(self)
 

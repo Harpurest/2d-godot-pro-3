@@ -3,6 +3,11 @@ extends Area2D
 signal attack_finished
 signal attack_info(isBehind, time)
 
+export var col_dist = 70.0
+export var col_angle = 0
+
+onready var colShape = $CollisionPolygon2D
+
 var state = null
 
 enum States {IDLE, ATTACK}
@@ -17,11 +22,11 @@ var combo_count = 0;
 var combo = [
 	{
 		'damage': 1,
-		'animation': 'attack_fast'
+		'animation': 'attack_fast_first'
 	},
 	{
 		'damage': 1,
-		'animation': 'attack_straight'
+		'animation': 'attack_fast'
 	},
 	{
 		'damage': 1,
@@ -52,9 +57,18 @@ func _physics_process(delta):
 			body.get_node("Health").take_damage(1)
 """
 
+func setup(player):
+	player.connect("direction_changed", self, "_on_direction_changed")
+
+func _on_direction_changed(new_direction):
+	col_angle = new_direction.angle()
+
 func _physics_process(delta):
 	if current_input_state == InputStates.REGISTERED and ready_for_next_attack:
 		attack()
+	$CollisionPolygon2D.position = col_dist * Vector2(
+		sin(rotation + col_angle), cos(rotation + col_angle)
+		);
 
 func _input(event):
 	if state != States.ATTACK:
