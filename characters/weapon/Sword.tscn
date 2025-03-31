@@ -450,6 +450,7 @@ tracks/4/keys = {
 [node name="Weapon" type="Area2D"]
 scale = Vector2( 0.7, 0.7 )
 collision_layer = 2
+collision_mask = 4
 script = ExtResource( 2 )
 __meta__ = {
 "_edit_group_": true
@@ -468,5 +469,4 @@ position = Vector2( 75, 0 )
 texture = ExtResource( 1 )
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
-position = Vector2( 0, 70 )
 polygon = PoolVector2Array( 137.143, -17.1429, 171.429, 0, 137.143, 17.1429, 28.5714, 17.1429, 28.5714, -17.1429 )

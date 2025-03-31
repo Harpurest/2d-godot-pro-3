@@ -3,10 +3,13 @@ extends Area2D
 signal attack_finished
 signal attack_info(isBehind, time)
 
-export var col_dist = 70.0
+"""
+export var col_disty = 70.0
+export var col_distx = 0.0
 export var col_angle = 0
 
 onready var colShape = $CollisionPolygon2D
+"""
 
 var state = null
 
@@ -31,17 +34,20 @@ var combo = [
 	{
 		'damage': 1,
 		'animation': 'attack_medium'
-	},
+	}
 ]
 
 var attack_current = {}
 
 # var hit_bodies := {}
-var hit_bodies := []
+# var hit_bodies := []
+
+var hit_areas := []
 
 func _ready():
 	$AnimationPlayer.connect("animation_finished", self, "_on_AnimationPlayer_animation_finished")
-	self.connect("body_entered", self, "_on_body_entered")
+	# self.connect("body_entered", self, "_on_body_entered")
+	self.connect("area_entered", self, "_on_area_entered")
 	_change_state(States.IDLE)
 
 """
@@ -55,20 +61,26 @@ func _physics_process(delta):
 			# hit_bodies[body_id] = true
 			hit_bodies.append(body_id)
 			body.get_node("Health").take_damage(1)
-"""
 
 func setup(player):
 	player.connect("direction_changed", self, "_on_direction_changed")
 
+
 func _on_direction_changed(new_direction):
 	col_angle = new_direction.angle()
+"""
 
 func _physics_process(delta):
 	if current_input_state == InputStates.REGISTERED and ready_for_next_attack:
 		attack()
-	$CollisionPolygon2D.position = col_dist * Vector2(
+	"""
+	$CollisionPolygon2D.position = col_disty * Vector2(
 		sin(rotation + col_angle), cos(rotation + col_angle)
+		) +
+		col_distx * Vector2(
+			cos(rotation + col_angle), sin(rotation + col_angle)
 		);
+	"""
 
 func _input(event):
 	if state != States.ATTACK:
@@ -84,6 +96,7 @@ func set_input_state_listening():
 func set_ready_for_next_attack():
 	ready_for_next_attack = true
 
+"""
 func _on_body_entered(body):
 	var body_id = body.get_rid().get_id()
 	if hit_bodies.has(body_id):
@@ -92,6 +105,15 @@ func _on_body_entered(body):
 	
 	hit_bodies.append(body_id)
 	body.take_damage(self, attack_current['damage'])
+"""
+
+func _on_area_entered(area):
+	var area_id = area.get_rid().get_id()
+	if hit_areas.has(area_id):
+		return
+	
+	hit_areas.append(area_id)
+	area.take_damage(self, attack_current['damage'])
 
 func attack():
 	combo_count += 1;
@@ -100,7 +122,7 @@ func attack():
 func _change_state(new_state):
 	match state:
 		States.ATTACK:
-			hit_bodies.clear()
+			hit_areas.clear()
 			current_input_state = InputStates.IDLE
 			ready_for_next_attack = false
 	

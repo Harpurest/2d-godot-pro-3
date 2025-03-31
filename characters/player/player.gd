@@ -5,6 +5,9 @@ onready var base_shadow = $Shadow.position
 
 signal speed_changed(speed, max_speed)
 
+signal postion_changed
+signal died
+
 const MoveGroundStrategy = preload("res://characters/player/move-ground-strategy.gd")
 const MoveAirStrategy = preload("res://characters/player/move-air-strategy.gd")
 
@@ -90,15 +93,16 @@ func _init():
 func _ready():
 	$DirectionVisualizer.setup(self)
 
+	"""
 	if not weapon_path:
 		return
 	var weapon_node = load(weapon_path).instance()
-	
+
 	$WeaponPivot/WeaponSpawn.add_child(weapon_node)
+	"""
 	weapon = $WeaponPivot/WeaponSpawn.get_child(0)
 	weapon.connect("attack_finished", self, "on_Weapon_attack_finished")
 	weapon.connect("attack_info", self, "on_Weapon_attack_info")
-	weapon.setup(self)
 
 	$WeaponPivot.setup(self)
 
@@ -123,12 +127,14 @@ func _physics_process(delta):
 			
 func _move():
 	move_and_slide(self._velocity)
+	"""
 	var viewport_size = get_viewport().size
 	for i in range(2):
 		if position[i] < 0:
 			position[i] = viewport_size[i]
 		if position[i] > viewport_size[i]:
 			position[i] = 0
+	"""
 
 func _animate_jump(progress):
 	var pivot_height = _jump_height * pow(sin(progress * PI), 0.7)

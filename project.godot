@@ -77,6 +77,7 @@ attack={
 
 2d_physics/layer_1="Character"
 2d_physics/layer_2="Weapon"
+2d_physics/layer_3="Character Hitbox"
 2d_physics/layer_4="Environment"
 
 [physics]

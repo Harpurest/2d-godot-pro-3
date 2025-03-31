@@ -52,6 +52,7 @@ func _init():
 		[States.ATTACK, Events.IDLE]: States.IDLE,
 		
 		[States.STAGGER, Events.IDLE]: States.IDLE,
+		[States.STAGGER, Events.STAGGER]: States.STAGGER,
 		[States.STAGGER, Events.DIE]: States.DIE,
 
 		[States.DIE, Events.DEATH]: States.DEATH,
@@ -62,6 +63,16 @@ func _ready() -> void:
 	$Health.connect("health_changed", self, "_on_Health_health_changed")
 	$Tween.connect("tween_completed", self, "_on_Tween_tween_completed")
 	$AnimationPlayer.connect("animation_finished", self, "_on_AnimationPlayer_animation_finished")
+	$Hitbox.setup(self)
+	$VisibilityNotifier2D.connect("screen_entered", self, "_on_screen_entered")
+	$VisibilityNotifier2D.connect("screen_exited", self, "_on_screen_exited")
+	visible = false
+
+func _on_screen_entered():
+	visible = true
+
+func _on_screen_exited():
+	visible = false
 
 func change_state(event):
 	var transition = [state, event]
@@ -111,7 +122,7 @@ func _on_Health_health_changed(new_health):
 func take_damage(source, amount):
 	if self.is_a_parent_of(source):
 		return
-	knockback_direction = (global_position - source.colShape.global_position).normalized()
+	knockback_direction = (global_position - source.global_position).normalized()
 	$Health.take_damage(amount)
 
 func _on_Tween_tween_completed(object, key):
